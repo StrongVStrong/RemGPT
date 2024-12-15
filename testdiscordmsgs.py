@@ -1,10 +1,10 @@
 import discord
 from discord.ext import commands
-import rem
-import remttsdisc
-import datetime
 import os
 from dotenv import load_dotenv
+from multiprocessing import Process, Queue
+from localtts import start_localtts_process  # Import the process handling function
+import datetime
 
 load_dotenv()
 
@@ -18,8 +18,7 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 
 # Function to export chat history to CSV
 def export_history_to_csv(user_input, response, filename="chat_history.csv"):
-    """Append user input and response to the chat history CSV file."""
-    
+    """Append user input and response to the chat history CSV file."""    
     # Get the current timestamp
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
@@ -66,20 +65,21 @@ async def on_message(message):
             return
         
         # Get the response from gemini.py (your custom response function)
-        response_text = rem.gemini_response(user_input)
+        response_text = "This is a test response"  # Example, replace with actual function
         
-        # Save logs
+        # Save logs (same as before)
         export_history_to_csv(user_input, response_text)
         
         # Send the generated response back to the same channel
         await message.channel.send(response_text)
-        '''
-        # Generate the audio file with playht
-        audio_file = remttsdisc.gen_audio(response_text)
+
+        # Send the response text to the queue for processing in localtts.py
+        queue.put(response_text)
         
-        if audio_file is None:
-            await message.channel.send("Failed to generate audio!")
-        else:
+        # Wait for the audio file to be returned
+        recent_wav_file = queue.get()
+        
+        if recent_wav_file:
             # Check if the bot is already in a voice channel
             voice_channel = discord.utils.get(bot.voice_clients, guild=message.guild)
             
@@ -93,16 +93,22 @@ async def on_message(message):
                     return
 
             # Play the audio file
-            voice_channel.play(discord.FFmpegPCMAudio(audio_file), after=lambda e: print('done', e))
+            voice_channel.play(discord.FFmpegPCMAudio(recent_wav_file), after=lambda e: print('done', e))
 
             # Optionally, disconnect after playing the audio
             while voice_channel.is_playing():
                 await discord.utils.sleep_until(voice_channel.is_playing())  # Wait for audio to finish
 
             await voice_channel.disconnect()  # Disconnect after audio is done
-        '''
-        
-        
 
-# Start the bot
-bot.run(DISC_BOT)  # Replace with your bot's token
+# Start the bot and the localtts process
+if __name__ == "__main__":
+    queue = Queue()
+    process = Process(target=start_localtts_process, args=(queue,))
+    process.start()
+    
+    # Start the bot
+    bot.run(DISC_BOT)  # Replace with your bot's token
+    
+    # Ensure the localtts process is stopped when the bot stops
+    process.terminate()
