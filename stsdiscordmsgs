@@ -1,0 +1,145 @@
+import discord
+from discord.ext import commands
+import speech_recognition as sr
+import os
+import asyncio
+import subprocess
+from dotenv import load_dotenv
+
+load_dotenv()
+
+DISC_BOT = os.getenv("DISC_BOT")
+OWNER_ID = os.getenv("OWNER_ID")  # Your owner ID
+
+# Set up the bot
+intents = discord.Intents.default()
+intents.message_content = True  # Ensure this intent is enabled
+intents.voice_states = True  # To listen to voice states
+bot = commands.Bot(command_prefix='!', intents=intents)
+
+# Initialize Speech Recognition
+recognizer = sr.Recognizer()
+
+# Function to transcribe audio using Google Web Speech API
+def transcribe_audio_with_google(audio_file_path):
+    with sr.AudioFile(audio_file_path) as source:
+        audio = recognizer.record(source)  # Record the audio from the file
+    try:
+        text = recognizer.recognize_google(audio)  # Send the audio to Google Web Speech API
+        return text
+    except sr.UnknownValueError:
+        print("Google Web Speech could not understand audio")
+        return None
+    except sr.RequestError as e:
+        print(f"Google Web Speech service error: {e}")
+        return None
+
+# Function to listen to the voice channel and capture speech
+async def listen_to_voice_channel(channel):
+    voice_client = await channel.connect()
+    print(f"Listening to {channel.name}...")
+
+    while True:
+        audio_file_path = "captured_audio.wav"
+        
+        # Capture audio from the voice channel using FFmpeg
+        await capture_audio_ffmpeg(voice_client, audio_file_path)
+
+        print(f"Transcribing audio from {audio_file_path}...")
+        # Transcribe the audio to text
+        text = transcribe_audio_with_google(audio_file_path)
+        if text:
+            print(f"Transcribed text: {text}")
+            response_text = rem.gemini_response(text, OWNER_ID)  # Send to Gemini
+            await channel.send(f"Transcribed message: {response_text}")
+
+        await asyncio.sleep(1)
+
+# Function to capture audio from the voice channel using FFmpeg
+async def capture_audio_ffmpeg(voice_client, audio_file_path):
+    print("Starting FFmpeg to capture audio...")
+
+    try:
+        # The FFmpeg command to capture the audio from Discord's voice channel
+        # Use discord.py's PCM audio to stream to FFmpeg
+        ffmpeg_command = [
+            'ffmpeg', 
+            '-f', 's16le',  # Raw audio format
+            '-ar', '48000',  # Audio sample rate
+            '-ac', '1',  # Mono audio
+            '-i', 'pipe:0',  # Input from pipe
+            audio_file_path  # Output file path
+        ]
+        
+        # Open a subprocess to run the FFmpeg command
+        process = subprocess.Popen(ffmpeg_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        # Create a stream from the voice client to pipe audio to FFmpeg
+        # Here we simulate the audio capture
+        await asyncio.sleep(5)  # Simulate capturing audio for a while
+
+        # Terminate the FFmpeg process after capturing the audio
+        process.stdin.close()
+        process.wait()
+        print("Audio capture finished.")
+        
+    except Exception as e:
+        print(f"Error while capturing audio with FFmpeg: {e}")
+
+# Function to join the user's voice channel
+async def join_voice_channel():
+    for member in bot.get_all_members():
+        if member.voice:
+            channel = member.voice.channel
+            voice_channel = await channel.connect()
+            print(f"Joined {channel.name}!")
+            return voice_channel
+    print("No user in a voice channel to join.")
+    return None
+
+# Event when the bot is ready
+@bot.event
+async def on_ready():
+    print(f'{bot.user} has connected to Discord!')
+    # Start listening to voice channels as soon as the bot is ready
+    bot.loop.create_task(start_listening())
+
+# Function to start listening to voice channels
+async def start_listening():
+    print("Starting to listen to voice channels...")
+    # If the bot is already in a voice channel, start listening
+    for guild in bot.guilds:
+        for channel in guild.voice_channels:
+            if channel.members:
+                print(f"Bot found a voice channel with members: {channel.name}")
+                await listen_to_voice_channel(channel)
+
+# Listen for messages in a specific channel
+@bot.event
+async def on_message(message):
+    if message.author == bot.user:
+        return
+    
+    target_channel_id = 1248111106480803840  # Replace with your channel ID
+    if message.channel.id == target_channel_id:
+        user_input = message.content
+        
+        # Check if the user input is empty
+        if not user_input.strip():
+            await message.channel.send("Please provide some text!")
+            return
+        
+        # Get the response from gemini.py (your custom response function)
+        response_text = rem.gemini_response(user_input, message.author.id)
+        
+        # Save logs
+        export_history_to_csv(user_input, response_text)
+        
+        # Send the generated response back to the same channel
+        await message.channel.send(response_text)
+
+        # Wait for the audio file to appear in Downloads folder and play it
+        await asyncio.sleep(1)  # Ensure a short delay to allow time for the file to show up
+
+# Start the bot
+bot.run(DISC_BOT)

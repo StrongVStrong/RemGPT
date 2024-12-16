@@ -10,6 +10,9 @@ load_dotenv()
 
 DISC_BOT = os.getenv("DISC_BOT")
 
+#My ID
+OWNER_ID = os.getenv("OWNER_ID")
+
 # Set up the bot
 intents = discord.Intents.default()
 intents.message_content = True  # Make sure to enable this intent in your Discord Developer Portal
@@ -111,7 +114,7 @@ async def on_message(message):
             return
         
         # Get the response from gemini.py (your custom response function)
-        response_text = rem.gemini_response(user_input)
+        response_text = rem.gemini_response(user_input, message.author.id)
         
         # Save logs
         export_history_to_csv(user_input, response_text)
