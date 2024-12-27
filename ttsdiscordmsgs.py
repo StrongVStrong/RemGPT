@@ -43,6 +43,13 @@ def export_history_to_csv(user_input, response, filename="chat_history.csv"):
         formatted_entry = f'"{log_entry["Timestamp"]}", "{log_entry["User"]}", "{log_entry["Rem"]}"\n'
         file.write(formatted_entry)
         file.flush()
+        
+    # Now, for appending Rem's entry to a separate text file
+    rem_filename = 'rem_responses.txt'  # You can change this to your desired file name
+
+    with open(rem_filename, mode='a', encoding='utf-8') as rem_file:
+        rem_file.write(f'"{log_entry["User"]}", "{log_entry["Rem"]}\n')
+        rem_file.flush()
 
 # Function to check the Downloads folder for the most recent audio file
 async def check_for_audio_file():
@@ -113,7 +120,7 @@ async def on_message(message):
             await message.channel.send("Please provide some text!")
             return
         
-        # Get the response from gemini.py (your custom response function)
+        # Get the response from gemini.py
         response_text = rem.gemini_response(user_input, message.author.id)
         
         # Save logs

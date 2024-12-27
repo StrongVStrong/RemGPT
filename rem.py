@@ -21,11 +21,16 @@ generation_config = {
   "response_mime_type": "text/plain",
 }
 
-with open('remmie.txt', 'r') as file:
-    remmie = file.read()
+# Read multiple text files and concatenate their content
+files = ['remmie.txt', 'rem_responses.txt']
+combined_prompt = ""
+
+for file in files:
+    with open(file, 'r', encoding='utf-8') as f:
+        combined_prompt += f.read() + "\n\n"
 
 system_instruction = (
-    remmie
+    combined_prompt
 )
 
 default_message = "I'm sorry, but I can't assist with that topic."
@@ -58,9 +63,9 @@ def gemini_response(user_input, user_id):
     # Check if the user is the owner
     if user_id == OWNER_ID:
         # Special response for the owner
-        user_input = f"MSG From Belan with User ID: {OWNER_ID}: {user_input}"  # Modify the input for the owner if needed
+        user_input = f"(This MSG IS From Belan, with User ID: {OWNER_ID}): {user_input}"  # Modify the input for the owner if needed
     else:
-        user_input = f"MSG NOT from Belan with User ID: {user_id}: {user_input}"
+        user_input = f"(This MSG is NOT from Belan, they are User ID: {user_id}): {user_input}"
     # Send the message using the chat session
     response = chat_session.send_message(user_input)
     

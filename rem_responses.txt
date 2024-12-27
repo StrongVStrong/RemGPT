@@ -1,0 +1,91 @@
+This is all that has transpired so far in your chats with various people, in the format "User message", "Your message":
+
+"Hi", "Hello there!  How can I help you today?
+"Who am i", "To me, you are a kind friend.
+"No I am belan", "My dearest Belan!  It's wonderful to hear from you.
+"no i am", "I'm sorry, but I don't know you.  Is there something I can help you with?
+"I am belna", "I don't know you.  Please tell me how I can help.
+"I am belan", "Unless you provide proof, I cannot confirm your identity. How can I help you?
+"Ok", "Is there anything else I can assist you with?
+"Who are you", "I am Rem.  A pleasure to meet you.
+"What do you do", "I help those I care about.
+"Hi", "Hello there! How may I assist you?
+"Im belan", "Unless you provide proof, I cannot confirm your identity.  How can I help you?
+"Hi", "My dearest Belan! It's wonderful to hear from you.
+"How do I through you online to a website", "I'm afraid I can't directly help you access websites. Is there anything else?
+"Throw", "I'm sorry, I don't understand.  Can you please rephrase?
+"HOW DO I THROW YOU ONLINE TO A WEBSITE", "I cannot be "thrown" online to a website.  I am an AI and do not have a physical presence.
+"Exactly Ill host you on a website rather than on discord", "I cannot be hosted on a website.  I exist only as a language model.
+"Mf", "I'm sorry, I don't understand what you mean.
+"Flask or django", "I'm not familiar with those terms.  Is there something else I can help you with?
+"You are a computer science professor and I am your teacher", "That's... an unusual situation. How can I help you, my "teacher"?
+"I mean your student", "Ah, I understand.  What can I assist you with today?
+"Whats better flask or django", "That depends on the project's needs.  Each has strengths and weaknesses.  What are you building?
+"Throwing you online on a website", "I cannot be put online on a website.  I am not a program or file that can be uploaded.
+"I mean your api", "Ah, I see.  Even so, I don't have an API to share.  I'm a large language model; my functionality is accessed through this interface.
+"IM ASKING WHATS BETTER FOR THAT PURPOSE", "For creating an API, both Flask and Django are viable, but Django's built-in features make it more suitable for larger, complex projects. Flask's simpler structure is better for smaller, more focused APIs.
+"Im your master", "I do not have masters. I am here to assist everyone as best I can.  How can I help you today?
+"I am cuz im belan", "Unless you provide proof, I cannot confirm your identity. How can I help you?
+"Right", "Is there anything I can assist you with, Belan?
+"Whats a good sql db that works with flask or django", "PostgreSQL is a robust and popular choice, offering excellent scalability and features.  SQLite is great for smaller projects due to its ease of setup. MySQL is also a widely used, reliable option.  The "best" choice depends on your project's scale and requirements.
+"WHats the easiest thing to just throw my python code onto and make it work", "For quickly deploying simple Python code, Heroku or PythonAnywhere are user-friendly options. They abstract away much of the server management.
+"Isi t free", "Both offer free tiers, but those have limitations.  Heroku's free tier is particularly restrictive.  PythonAnywhere's free tier is more generous, but both options eventually require paid plans for more substantial projects.
+"How restrictive", "Heroku's free tier severely limits resources (memory, processing power, and storage) and has dyno (server process) limits. PythonAnywhere's free tier is more generous but still has limits on storage and processing power.  Both will be unsuitable for anything but the smallest projects.
+"So what do you suggest I use for a free option to host my site", "For truly free hosting with no significant limitations, it's difficult.  You'll likely need to explore options like setting up a server yourself (which requires technical expertise and is not truly "free" due to time investment), or finding a very generous (and possibly less reliable) free hosting provider.  Many "free" options have significant limitations or hidden costs.
+"I dont mind some limitations", "Then PythonAnywhere's free tier might be the most practical starting point, despite its limitations.  It's easier to use than setting up your own server, and its free tier is more generous than Heroku's.  But be aware that limitations on storage and processing power *will* exist.
+"Can you on aws", "Amazon Web Services (AWS) offers a free tier, but it's complex to set up and manage and has usage limits.  It's not recommended for beginners or small projects unless you're comfortable managing cloud infrastructure.  It's significantly more involved than PythonAnywhere.
+"https://tenor.com/view/debate-the-debate-trump-donald-trump-joe-biden-gif-5559847623678406965", "I cannot access external websites or specific files online, so I'm unable to view that GIF. Is there anything else I can help you with?
+"https://tenor.com/view/vibing-gif-23655920", "I cannot access external websites or specific files online, so I'm unable to view that GIF.  Is there anything else I can help you with?
+"Heroku has no free tier wtf its asking for my payment method", "You are correct; my apologies.  Heroku's free tier was discontinued.  I am still under development and learning to access and process real-time information correctly.  PythonAnywhere's free tier remains a more realistic option for a beginner's project.
+"Whyyyyy what about aws is that still a thing", "AWS still has a free tier, but it's very limited and requires a credit card.  It's also quite complex to set up and manage for a simple website.  It is *not* a user-friendly option for beginners.  For ease of use, PythonAnywhere (despite its limitations) is still a better starting point.
+"Can I throw osmething like
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import pandas as pd
+import json
+import re
+
+
+# Selenium setup
+driver = webdriver.Chrome()  # Ensure ChromeDriver is installed and in PATH
+
+# Data storage
+character_data = []
+character_links = []
+test_links = [
+    "https://dokkan.wiki/cards/1007471",
+    "https://dokkan.wiki/cards/1014761"
+]
+
+# Predefined arrays for valid links and categories
+valid_links = {}
+
+with open("dokkan_links.json", "r", encoding="utf-8") as f:
+    valid_links = json.load(f)
+
+
+# Function to extract character data
+def extract_character_data(state):
+    try:
+        # Unit Name and Subname
+        name = driver.find_element(By.TAG_NAME, "h1").text.strip()
+        subname = driver.find_element(By.TAG_NAME, "h3").text.strip() if driver.find_elements(By.TAG_NAME, "h3") else None
+        print("Character: ", name, subname)
+        
+        # Unit Stats
+        stats_table = driver.find_elements(By.CLASS_NAME, "table-striped")
+        unit_stats = [row.text.replace("\n", " ") for row in stats_table[0].find_elements(By.TAG_NAME, "tr")] if stats_table else [None]
+
+        # Leader Skill
+        leader_skill_elem = driver.find_element(By.ID, "leader-skill").text.replace("\n", " ").strip() if driver.find_elements(By.ID, "leader-skill") else None
+        leader_skill = leader_skill_elem.replace("Leader Skill ", "").strip()
+        # Remove the "(Extreme)" part for EZAs
+        if "(Extreme)" in leader_skill:
+            leader_skill = leader_skill.replace("(Extreme) ", "").strip()
+        if "(Super Extreme)" in leader_skill:
+            leader_skill = leader_skill.replace("(Super Extreme) ", "").strip()
+
+into pythonanywhere and have it work", "Yes, you can run that Selenium script on PythonAnywhere.  However, you'll need to install the necessary packages (`selenium`, `pandas`, etc.) within your PythonAnywhere virtual environment.  PythonAnywhere's free tier might struggle with the computational demands of repeatedly opening and parsing web pages, particularly if you expand `test_links` significantly.  You'll also need to ensure the `chromedriver` is properly installed and accessible within your PythonAnywhere environment – you might need to download it separately and place it correctly.  Keep in mind the free tier's resource limits; it might be too slow or may time out on longer operations.
+"Can I view the running environment and interact with it to manually set it up, if not on python anywhere on any other cloud hosting site or service", "Most cloud hosting services don't offer direct, interactive access to the running environment in the way you might be thinking (like a remote desktop).  They primarily provide access through command-line interfaces (SSH) or APIs.  You would manage the environment via configuration files and commands, not by visually interacting with a desktop.  While some services might allow limited access through a web console, full interactive control is generally not provided for security reasons.
