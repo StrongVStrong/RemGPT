@@ -1,3 +1,4 @@
 .env
 chat_history.csv
 remmie.txt
+rem_responses.txt

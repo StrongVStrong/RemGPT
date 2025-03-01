@@ -5,6 +5,7 @@ import rem
 import asyncio
 import datetime
 from dotenv import load_dotenv
+import requests
 
 load_dotenv()
 
@@ -12,6 +13,10 @@ DISC_BOT = os.getenv("DISC_BOT")
 
 #My ID
 OWNER_ID = os.getenv("OWNER_ID")
+
+API_KEY = os.getenv("key")
+
+API_URL = "https://api.sambanova.ai/v1/chat/completions"
 
 # Set up the bot
 intents = discord.Intents.default()
@@ -105,6 +110,60 @@ async def on_ready():
     # Start checking for audio files in the background
     bot.loop.create_task(check_for_audio_file())
 
+# Read multiple text files and concatenate their content
+files = ['remmie.txt', 'rem_responses.txt']
+combined_prompt = ""
+chat_memory = []
+for file in files:
+    if file == 'rem_responses.txt':
+        # Read only the last 16 lines from rem_responses.txt
+        with open(file, 'r', encoding='utf-8') as f:
+            lines = f.readlines()[-16:]  # Get the last 16 lines
+            combined_prompt += "".join(lines) + "\n\n"
+    else:
+        # Read the entire content for other files
+        with open(file, 'r', encoding='utf-8') as f:
+            combined_prompt += f.read() + "\n\n"
+
+# Function to get AI response
+def get_ai_response(user_input, user_id):
+    """Fetches a response from the AI API with owner-specific handling."""
+    global chat_memory
+    # Check if the user is the owner
+    if str(user_id) == str(OWNER_ID):
+        # Special handling for the owner's message
+        prompt = f"(This MSG IS From Belan, with User ID: {OWNER_ID}): {user_input}"
+    else:
+        # General handling for other users
+        prompt = f"(This MSG is NOT from Belan, they are User ID: {user_id}): {user_input}"
+    chat_memory.append({"role": "user", "content": prompt})
+    messages = [{"role": "system", "content": combined_prompt}] + chat_memory
+    # Prepare the API payload
+    headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
+    payload = {
+        "model": "Meta-Llama-3.1-70B-Instruct",
+        "messages": messages,
+        "temperature": 0.8,
+        "top_p": 0.1,
+        "max_tokens": 200
+    }
+
+    try:
+        # Send the request to the API
+        response = requests.post(API_URL, headers=headers, json=payload)
+        response.raise_for_status()  # Raise an error for non-200 responses
+        
+        # Extract the AI's response
+        ai_response = response.json()['choices'][0]['message']['content']
+        
+        # Append the AI's response to the memory
+        chat_memory.append({"role": "assistant", "content": ai_response})
+        
+        return ai_response
+    except Exception as e:
+        return f"Error fetching response: {str(e)}"
+
+
 # Listen for messages in a specific channel
 @bot.event
 async def on_message(message):
@@ -121,7 +180,7 @@ async def on_message(message):
             return
         
         # Get the response from gemini.py
-        response_text = rem.gemini_response(user_input, message.author.id)
+        response_text = get_ai_response(user_input, message.author.id)
         
         # Save logs
         export_history_to_csv(user_input, response_text)
