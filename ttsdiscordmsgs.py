@@ -189,7 +189,7 @@ async def on_message(message):
         await message.channel.send(response_text)
 
         # Wait for the audio file to appear in Downloads folder and play it
-        await asyncio.sleep(1)  # Ensure a short delay to allow time for the file to show up
+        await asyncio.sleep(1)
         
 # Start the bot
 bot.run(DISC_BOT)
